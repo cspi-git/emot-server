@@ -13,17 +13,14 @@ npm i dotenv simple-aes-256 mongodb request-async bottleneck express moment groo
 ```
 
 ## Setup
-1. Host a database using [MongoDB](https://mongodb.com/]
-2. Put the database URL with credential in .env **MONGODB_URL**
-3. Make a database called **core** and in the database make a collection called **emot.emails**
+1. Make an environment file and add a variable called MONGODB_URL, there you must put your MongoDB url database.
+2. In your MongoDB make a database called **core** and a collection called **emot.emails**.
+3. Change the master key and admin key in **index.js**, make sure the admin key matches the **key.txt** in the client.
 
 ## Usage
 ```
 node index.js
 ```
-
-## Note
-Be sure to change the **masterKey** & **adminKey** in index.js and ONLY use environment variables for production.
 
 ## License
 MIT © Hanaui
