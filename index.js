@@ -23,10 +23,7 @@
     
     const web = express()
     const port = process.env.PORT || 8080
-    const threads = new bottleNeck.default({
-        maxConcurrent: 20
-    })
-
+    const threads = new bottleNeck.default({ maxConcurrent: 20 })
     const keyPair = await hqc.keyPair()
 
     const client = new MongoClient(process.env.MONGODB_URL)
@@ -36,7 +33,7 @@
     // Functions
     async function check(email){
         const emailIndex = _.findIndex(emot.emails, { email: email })
-        var response = await request(`https://hnisa.vercel.app/api/breaches/email?email=${email}`)
+        var response = await request(`https://cspi-pa1.vercel.app/check/email?e=${email}`)
         response = JSON.parse(response.body)
 
         if(response.status === "success"){
@@ -54,6 +51,8 @@
         return new Promise(async(resolve)=>{
             var list = await emails.find({}, { projection: { _id: 0 } }).toArray()
 
+            if(!list.length) return resolve()
+
             for( const email in list ){
                 list[email].encryptedEmail = list[email].email
                 list[email].email = simpleAES256.decrypt(emot.masterKey, Buffer.from(list[email].email, "hex")).toString()
@@ -65,9 +64,7 @@
         })
     }
 
-    async function checkEmails(){
-        for( const email of emot.emails ) threads.schedule(check, email.email)
-    }
+    const checkEmails = ()=>{if(emot.emails.length) for( const email of emot.emails ) threads.schedule(check, email.email)}
 
     function getSecret(cyphertext){
         return new Promise(async(resolve)=>{
@@ -76,7 +73,7 @@
     }
     
     /// Configurations
-    // Express
+    //* Express
     web.use(express.json())
     
     // Main
@@ -84,12 +81,7 @@
     await client.connect()
     console.log("Successfully connected to the database.")
     
-    web.get("/pk", (req, res)=>{
-        res.json({
-            data: keyPair.publicKey.toString()
-        })
-    })
-
+    web.get("/pk", (req, res)=>{ res.json({ data: keyPair.publicKey.toString() })})
     web.use((err, req, res, next)=>{
         if(err.message === "Bad request") return res.json({
             status: "failed",
@@ -99,7 +91,7 @@
         next()
     })
     
-    web.use("", async(req, res, next)=>{
+    web.use(async(req, res, next)=>{
         try{
             if(!req.body.hasOwnProperty("cyphertext") && !req.body.hasOwnProperty("data")) return res.json({
                 status: "failed",
@@ -155,6 +147,7 @@
     
         var data = { email: simpleAES256.encrypt(emot.masterKey, body.email).toString("hex"), breaches: simpleAES256.encrypt(emot.masterKey, JSON.stringify([])).toString("hex"), createdDate: moment().format("MMMM Do YYYY, h:mm:ss a") }
     
+        //* Adding process
         await emails.insertOne(data)
         data.encryptedEmail = data.email
         data.email = body.email
@@ -182,6 +175,7 @@
             message: "The specified email does not exists."
         })
     
+        //* Delete process
         await emails.deleteOne({ email: _.find(emot.emails, { email: body.email }).encryptedEmail })
         delete emot.emails[_.findIndex(emot.emails, { email: body.email })]
         emot.emails = groom(emot.emails)

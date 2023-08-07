@@ -1,10 +1,10 @@
 # Emot Server
-Emot Server source code.
+Emot server.
 
 ## Installation
 Github:
 ```
-git clone https://github.com/hanaui-git/emot-server
+git clone https://github.com/cspi-git/emot-server
 ```
 
 NpmJS:
@@ -23,4 +23,4 @@ node index.js
 ```
 
 ## License
-MIT © Hanaui
+MIT © CSPI
